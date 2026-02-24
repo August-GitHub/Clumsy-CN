@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 
 // ! the order decides which module get processed first
 Module* modules[MODULE_CNT] = {
@@ -25,10 +26,14 @@ static Ihandle *dialog, *topFrame, *bottomFrame;
 static Ihandle *statusLabel;
 static Ihandle *filterText, *filterButton;
 Ihandle *filterSelectList;
+static Ihandle *langSelectList;
 // timer to update icons
 static Ihandle *stateIcon;
 static Ihandle *timer;
 static Ihandle *timeout = NULL;
+
+static void updateUILanguage(void);
+static int uiLangSelectCb(Ihandle *ih, char *text, int item, int state);
 
 void showStatus(const char *line);
 static int uiOnDialogShow(Ihandle *ih, int state);
@@ -52,6 +57,7 @@ UINT filtersSize;
 filterRecord filters[CONFIG_MAX_RECORDS] = {0};
 char configBuf[CONFIG_BUF_SIZE+2]; // add some padding to write \n
 BOOL parameterized = 0; // parameterized flag, means reading args from command line
+Language savedLanguage = LANG_ENGLISH;
 
 // loading up filters and fill in
 void loadConfig() {
@@ -94,6 +100,25 @@ EAT_SPACE:  while (isspace(*current)) { ++current; }
             current = strchr(last, ':');
             if (!current) break;
             *current = '\0';
+            
+            // check if this is a language setting
+            if (strcmp(last, "language") == 0) {
+                current += 1;
+                while (isspace(*current)) { ++current; }
+                last = current;
+                current = strchr(last, '\n');
+                if (!current) break;
+                *current = '\0';
+                if (*(current-1) == '\r') *(current-1) = 0;
+                savedLanguage = atoi(last);
+                if (savedLanguage < 0 || savedLanguage >= LANG_COUNT) {
+                    savedLanguage = LANG_ENGLISH;
+                }
+                i18nInit(savedLanguage);
+                last = current = current + 1;
+                continue;
+            }
+            
             filters[filtersSize].filterName = last;
             current += 1;
             while (isspace(*current)) { ++current; } // eat potential space after :
@@ -121,7 +146,7 @@ EAT_SPACE:  while (isspace(*current)) { ++current; }
 
 void init(int argc, char* argv[]) {
     UINT ix;
-    Ihandle *topVbox, *bottomVbox, *dialogVBox, *controlHbox;
+    Ihandle *topVbox, *bottomVbox, *dialogVBox, *controlHbox, *langHbox;
     Ihandle *noneIcon, *doingIcon, *errorIcon;
     char* arg_value = NULL;
 
@@ -132,8 +157,7 @@ void init(int argc, char* argv[]) {
     IupOpen(&argc, &argv);
 
     // this is so easy to get wrong so it's pretty worth noting in the program
-    statusLabel = IupLabel("NOTICE: When capturing localhost (loopback) packets, you CAN'T include inbound criteria.\n"
-        "Filters like 'udp' need to be 'udp and outbound' to work. See readme for more info.");
+    statusLabel = IupLabel(i18nGetString(STR_NOTICE));
     IupSetAttribute(statusLabel, "EXPAND", "HORIZONTAL");
     IupSetAttribute(statusLabel, "PADDING", "8x8");
 
@@ -142,9 +166,15 @@ void init(int argc, char* argv[]) {
             filterText = IupText(NULL),
             controlHbox = IupHbox(
                 stateIcon = IupLabel(NULL),
-                filterButton = IupButton("Start", NULL),
+                filterButton = IupButton(i18nGetString(STR_START), NULL),
                 IupFill(),
-                IupLabel("Presets:  "),
+                langHbox = IupHbox(
+                    IupLabel(i18nGetString(STR_LANGUAGE)),
+                    langSelectList = IupList(NULL),
+                    NULL
+                ),
+                IupFill(),
+                IupLabel(i18nGetString(STR_PRESETS)),
                 filterSelectList = IupList(NULL),
                 NULL
             ),
@@ -164,7 +194,7 @@ void init(int argc, char* argv[]) {
         parameterized = 1;
     }
 
-    IupSetAttribute(topFrame, "TITLE", "Filtering");
+    IupSetAttribute(topFrame, "TITLE", i18nGetString(STR_FILTERING));
     IupSetAttribute(topFrame, "EXPAND", "HORIZONTAL");
     IupSetAttribute(filterText, "EXPAND", "HORIZONTAL");
     IupSetCallback(filterText, "VALUECHANGED_CB", (Icallback)uiFilterTextCb);
@@ -173,6 +203,19 @@ void init(int argc, char* argv[]) {
     IupSetAttribute(topVbox, "NCMARGIN", "4x4");
     IupSetAttribute(topVbox, "NCGAP", "4x2");
     IupSetAttribute(controlHbox, "ALIGNMENT", "ACENTER");
+
+    // setup language selector
+    IupSetAttribute(langSelectList, "VISIBLECOLUMNS", "10");
+    IupSetAttribute(langSelectList, "DROPDOWN", "YES");
+    for (ix = 0; ix < LANG_COUNT; ++ix) {
+        char ixBuf[4];
+        sprintf(ixBuf, "%d", ix+1);
+        IupStoreAttribute(langSelectList, ixBuf, i18nGetLanguageName(ix));
+    }
+    char langVal[4];
+    sprintf(langVal, "%d", i18nGetCurrentLanguage() + 1);
+    IupSetAttribute(langSelectList, "VALUE", langVal);
+    IupSetCallback(langSelectList, "ACTION", (Icallback)uiLangSelectCb);
 
     // setup state icon
     IupSetAttribute(stateIcon, "IMAGE", "none_icon");
@@ -184,7 +227,11 @@ void init(int argc, char* argv[]) {
     for (ix = 0; ix < filtersSize; ++ix) {
         char ixBuf[4];
         sprintf(ixBuf, "%d", ix+1); // ! staring from 1, following lua indexing
-        IupStoreAttribute(filterSelectList, ixBuf, filters[ix].filterName);
+        if (strcmp(filters[ix].filterName, "loopback packets") == 0) {
+            IupStoreAttribute(filterSelectList, ixBuf, i18nGetString(STR_LOOPBACK_PACKETS));
+        } else {
+            IupStoreAttribute(filterSelectList, ixBuf, filters[ix].filterName);
+        }
     }
     IupSetAttribute(filterSelectList, "VALUE", "1");
     IupSetCallback(filterSelectList, "ACTION", (Icallback)uiListSelectCb);
@@ -197,7 +244,7 @@ void init(int argc, char* argv[]) {
             NULL
         )
     );
-    IupSetAttribute(bottomFrame, "TITLE", "Functions");
+    IupSetAttribute(bottomFrame, "TITLE", i18nGetString(STR_FUNCTIONS));
     IupSetAttribute(bottomVbox, "NCMARGIN", "4x4");
     IupSetAttribute(bottomVbox, "NCGAP", "4x2");
 
@@ -230,7 +277,7 @@ void init(int argc, char* argv[]) {
         )
     );
 
-    IupSetAttribute(dialog, "TITLE", "clumsy " CLUMSY_VERSION);
+    IupSetAttribute(dialog, "TITLE", i18nGetString(STR_TITLE));
     IupSetAttribute(dialog, "SIZE", "480x"); // add padding manually to width
     IupSetAttribute(dialog, "RESIZE", "NO");
     IupSetCallback(dialog, "SHOW_CB", (Icallback)uiOnDialogShow);
@@ -257,6 +304,30 @@ void init(int argc, char* argv[]) {
         IupStoreAttribute(timeout, "TIME", valueBuf);
         IupSetCallback(timeout, "ACTION_CB", uiTimeoutCb);
         IupSetAttribute(timeout, "RUN", "YES");
+    }
+}
+
+// save current settings including language
+void saveConfig() {
+    char path[MSG_BUFSIZE];
+    char *p;
+    FILE *f;
+    GetModuleFileName(NULL, path, MSG_BUFSIZE);
+    p = strrchr(path, '\\');
+    if (p == NULL) p = strrchr(path, '/');
+    strcpy(p+1, CONFIG_FILE);
+    
+    f = fopen(path, "w");
+    if (f) {
+        UINT ix;
+        // write language setting first
+        fprintf(f, "language: %d\n", savedLanguage);
+        // write all filters
+        for (ix = 0; ix < filtersSize; ++ix) {
+            fprintf(f, "%s:%s\n", filters[ix].filterName, filters[ix].filterValue);
+        }
+        fclose(f);
+        LOG("Config saved to %s", path);
     }
 }
 
@@ -292,8 +363,8 @@ static BOOL check32RunningOn64(HWND hWnd) {
     BOOL is64ret;
     // consider IsWow64Process return value
     if (IsWow64Process(GetCurrentProcess(), &is64ret) && is64ret) {
-        MessageBox(hWnd, (LPCSTR)"You're running 32bit clumsy on 64bit Windows, which wouldn't work. Please use the 64bit clumsy version.",
-            (LPCSTR)"Aborting", MB_OK);
+        MessageBox(hWnd, (LPCSTR)i18nGetString(STR_32BIT_ON_64BIT),
+            (LPCSTR)i18nGetString(STR_ABORTING), MB_OK);
         return TRUE;
     }
     return FALSE;
@@ -333,8 +404,8 @@ static int uiOnDialogShow(Ihandle *ih, int state) {
 
     exit = checkIsRunning();
     if (exit) {
-        MessageBox(hWnd, (LPCSTR)"Theres' already an instance of clumsy running.",
-            (LPCSTR)"Aborting", MB_OK);
+        MessageBox(hWnd, (LPCSTR)i18nGetString(STR_ALREADY_RUNNING),
+            (LPCSTR)i18nGetString(STR_ABORTING), MB_OK);
         return IUP_CLOSE;
     }
 
@@ -366,9 +437,9 @@ static int uiStartCb(Ihandle *ih) {
     }
 
     // successfully started
-    showStatus("Started filtering. Enable functionalities to take effect.");
+    showStatus(i18nGetString(STR_STARTED));
     IupSetAttribute(filterText, "ACTIVE", "NO");
-    IupSetAttribute(filterButton, "TITLE", "Stop");
+    IupSetAttribute(filterButton, "TITLE", i18nGetString(STR_STOP));
     IupSetCallback(filterButton, "ACTION", uiStopCb);
     IupSetAttribute(timer, "RUN", "YES");
 
@@ -385,7 +456,7 @@ static int uiStopCb(Ihandle *ih) {
     divertStop();
 
     IupSetAttribute(filterText, "ACTIVE", "YES");
-    IupSetAttribute(filterButton, "TITLE", "Start");
+    IupSetAttribute(filterButton, "TITLE", i18nGetString(STR_START));
     IupSetAttribute(filterButton, "ACTIVE", "YES");
     IupSetCallback(filterButton, "ACTION", uiStartCb);
 
@@ -398,8 +469,66 @@ static int uiStopCb(Ihandle *ih) {
     sendState = SEND_STATUS_NONE;
     IupSetAttribute(stateIcon, "IMAGE", "none_icon");
 
-    showStatus("Stopped. To begin again, edit criteria and click Start.");
+    showStatus(i18nGetString(STR_STOPPED));
     return IUP_DEFAULT;
+}
+
+static int uiLangSelectCb(Ihandle *ih, char *text, int item, int state) {
+    UNREFERENCED_PARAMETER(text);
+    UNREFERENCED_PARAMETER(ih);
+    if (state == 1) {
+        Language newLang = (Language)(item - 1);
+        i18nSetLanguage(newLang);
+        savedLanguage = newLang;
+        updateUILanguage();
+        saveConfig();
+    }
+    return IUP_DEFAULT;
+}
+
+static void updateUILanguage(void) {
+    UINT ix;
+    char langVal[4];
+    
+    // Update dialog title
+    IupSetAttribute(dialog, "TITLE", i18nGetString(STR_TITLE));
+    
+    // Update top frame
+    IupSetAttribute(topFrame, "TITLE", i18nGetString(STR_FILTERING));
+    
+    // Update bottom frame
+    IupSetAttribute(bottomFrame, "TITLE", i18nGetString(STR_FUNCTIONS));
+    
+    // Update button text
+    if (strcmp(IupGetAttribute(filterButton, "TITLE"), i18nGetString(STR_START)) == 0 || 
+        strcmp(IupGetAttribute(filterButton, "TITLE"), "Start") == 0) {
+        IupSetAttribute(filterButton, "TITLE", i18nGetString(STR_START));
+    } else {
+        IupSetAttribute(filterButton, "TITLE", i18nGetString(STR_STOP));
+    }
+    
+    // Update status label
+    IupStoreAttribute(statusLabel, "TITLE", i18nGetString(STR_NOTICE));
+    
+    // Update filter presets
+    for (ix = 0; ix < filtersSize; ++ix) {
+        char ixBuf[4];
+        sprintf(ixBuf, "%d", ix+1);
+        if (strcmp(filters[ix].filterName, "loopback packets") == 0) {
+            IupStoreAttribute(filterSelectList, ixBuf, i18nGetString(STR_LOOPBACK_PACKETS));
+        } else {
+            IupStoreAttribute(filterSelectList, ixBuf, filters[ix].filterName);
+        }
+    }
+    
+    // Update language selector
+    for (ix = 0; ix < LANG_COUNT; ++ix) {
+        char ixBuf[4];
+        sprintf(ixBuf, "%d", ix+1);
+        IupStoreAttribute(langSelectList, ixBuf, i18nGetLanguageName(ix));
+    }
+    sprintf(langVal, "%d", i18nGetCurrentLanguage() + 1);
+    IupSetAttribute(langSelectList, "VALUE", langVal);
 }
 
 static int uiToggleControls(Ihandle *ih, int state) {
@@ -471,9 +600,29 @@ static int uiFilterTextCb(Ihandle *ih)  {
 
 static void uiSetupModule(Module *module, Ihandle *parent) {
     Ihandle *groupBox, *toggle, *controls, *icon;
+    const char* displayName = NULL;
+    
+    if (strcmp(module->shortName, "lag") == 0) {
+        displayName = i18nGetString(STR_LAG);
+    } else if (strcmp(module->shortName, "drop") == 0) {
+        displayName = i18nGetString(STR_DROP);
+    } else if (strcmp(module->shortName, "throttle") == 0) {
+        displayName = i18nGetString(STR_THROTTLE);
+    } else if (strcmp(module->shortName, "duplicate") == 0) {
+        displayName = i18nGetString(STR_DUPLICATE);
+    } else if (strcmp(module->shortName, "ood") == 0) {
+        displayName = i18nGetString(STR_OUT_OF_ORDER);
+    } else if (strcmp(module->shortName, "tamper") == 0) {
+        displayName = i18nGetString(STR_TAMPER);
+    } else if (strcmp(module->shortName, "reset") == 0) {
+        displayName = i18nGetString(STR_SET_TCP_RST);
+    } else if (strcmp(module->shortName, "bandwidth") == 0) {
+        displayName = i18nGetString(STR_BANDWIDTH);
+    }
+    
     groupBox = IupHbox(
         icon = IupLabel(NULL),
-        toggle = IupToggle(module->displayName, NULL),
+        toggle = IupToggle(displayName, NULL),
         IupFill(),
         controls = module->setupUIFunc(),
         NULL

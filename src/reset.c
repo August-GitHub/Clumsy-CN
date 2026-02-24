@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "reset"
 
 static const unsigned int TCP_MIN_SIZE = sizeof(WINDIVERT_IPHDR) + sizeof(WINDIVERT_TCPHDR);
@@ -28,10 +29,10 @@ static int resetSetRSTNextButtonCb(Ihandle *ih) {
 
 static Ihandle* resetSetupUI() {
     Ihandle *dupControlsBox = IupHbox(
-        rstButton = IupButton("RST next packet", NULL),
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        rstButton = IupButton(i18nGetString(STR_RST_NEXT_PACKET), NULL),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
         );
@@ -114,7 +115,7 @@ static short resetProcess(PacketNode *head, PacketNode *tail) {
 }
 
 Module resetModule = {
-    "Set TCP RST",
+    NULL,
     NAME,
     (short*)&resetEnabled,
     resetSetupUI,

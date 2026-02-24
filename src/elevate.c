@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <VersionHelpers.h>
 #include "common.h"
+#include "i18n.h"
 
 // 
 //   FUNCTION: IsRunAsAdmin()
@@ -105,8 +106,8 @@ BOOL tryElevate(HWND hWnd, BOOL silent) {
     // Check the current process's "run as administrator" status.
     BOOL fIsRunAsAdmin;
     if (!IsWindowsVistaOrGreater()) {
-        if (!silent) MessageBox(hWnd, (LPCSTR)"Unsupported Windows version. clumsy only supports Windows Vista or above.",
-            (LPCSTR)"Aborting", MB_OK);
+        if (!silent) MessageBox(hWnd, (LPCSTR)i18nGetString(STR_UNSUPPORTED_WINDOWS),
+            (LPCSTR)i18nGetString(STR_ABORTING), MB_OK);
         return TRUE;
     }
 
@@ -136,14 +137,14 @@ BOOL tryElevate(HWND hWnd, BOOL silent) {
                 {
                     // The user refused the elevation.
                     // alert and exit
-                    MessageBox(hWnd, (LPCSTR)"clumsy needs to be elevated to work. Run as Administrator or click Yes in promoted UAC dialog",
-                        (LPCSTR)"Aborting", MB_OK);
+                    MessageBox(hWnd, (LPCSTR)i18nGetString(STR_NEED_ELEVATION),
+                        (LPCSTR)i18nGetString(STR_ABORTING), MB_OK);
                 }
             }
             // runas executed.
         } else {
-            MessageBox(hWnd, (LPCSTR)"Failed to get clumsy path. Please place the executable in a normal directory.",
-                (LPCSTR)"Aborting", MB_OK);
+            MessageBox(hWnd, (LPCSTR)i18nGetString(STR_FAILED_GET_PATH),
+                (LPCSTR)i18nGetString(STR_ABORTING), MB_OK);
         }
     }
 

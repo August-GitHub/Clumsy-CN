@@ -3,6 +3,7 @@
 #include <Windows.h>
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "drop"
 
 static Ihandle *inboundCheckbox, *outboundCheckbox, *chanceInput;
@@ -14,9 +15,9 @@ static volatile short dropEnabled = 0,
 
 static Ihandle* dropSetupUI() {
     Ihandle *dropControlsBox = IupHbox(
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
     );
@@ -74,7 +75,7 @@ static short dropProcess(PacketNode *head, PacketNode* tail) {
 
 
 Module dropModule = {
-    "Drop",
+    NULL,
     NAME,
     (short*)&dropEnabled,
     dropSetupUI,

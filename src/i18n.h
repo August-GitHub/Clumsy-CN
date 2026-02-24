@@ -1,0 +1,60 @@
+#pragma once
+
+#include <stdio.h>
+
+typedef enum {
+    LANG_ENGLISH = 0,
+    LANG_CHINESE_SIMPLIFIED,
+    LANG_CHINESE_TRADITIONAL,
+    LANG_JAPANESE,
+    LANG_COUNT
+} Language;
+
+typedef enum {
+    STR_TITLE = 0,
+    STR_FILTERING,
+    STR_FUNCTIONS,
+    STR_START,
+    STR_STOP,
+    STR_PRESETS,
+    STR_NOTICE,
+    STR_STARTED,
+    STR_STOPPED,
+    STR_ABORTING,
+    STR_ALREADY_RUNNING,
+    STR_32BIT_ON_64BIT,
+    STR_UNSUPPORTED_WINDOWS,
+    STR_NEED_ELEVATION,
+    STR_FAILED_GET_PATH,
+    STR_LAG,
+    STR_DROP,
+    STR_THROTTLE,
+    STR_DUPLICATE,
+    STR_OUT_OF_ORDER,
+    STR_TAMPER,
+    STR_SET_TCP_RST,
+    STR_BANDWIDTH,
+    STR_INBOUND,
+    STR_OUTBOUND,
+    STR_DELAY_MS,
+    STR_CHANCE_PERCENT,
+    STR_COUNT,
+    STR_TIMEFRAME_MS,
+    STR_DROP_THROTTLED,
+    STR_REDO_CHECKSUM,
+    STR_RST_NEXT_PACKET,
+    STR_LIMIT_KB_S,
+    STR_LANGUAGE,
+    STR_ENGLISH,
+    STR_CHINESE_SIMPLIFIED,
+    STR_CHINESE_TRADITIONAL,
+    STR_JAPANESE,
+    STR_LOOPBACK_PACKETS,
+    STR_COUNT_MAX
+} StringID;
+
+void i18nInit(Language lang);
+Language i18nGetCurrentLanguage(void);
+void i18nSetLanguage(Language lang);
+const char* i18nGetString(StringID id);
+const char* i18nGetLanguageName(Language lang);

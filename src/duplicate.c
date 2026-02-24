@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "duplicate"
 #define COPIES_MIN "2"
 #define COPIES_MAX "50"
@@ -16,11 +17,11 @@ static volatile short dupEnabled = 0,
 
 static Ihandle* dupSetupUI() {
     Ihandle *dupControlsBox = IupHbox(
-        IupLabel("Count:"),
+        IupLabel(i18nGetString(STR_COUNT)),
         countInput = IupText(NULL),
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
         );
@@ -85,7 +86,7 @@ static short dupProcess(PacketNode *head, PacketNode *tail) {
 }
 
 Module dupModule = {
-    "Duplicate",
+    NULL,
     NAME,
     (short*)&dupEnabled,
     dupSetupUI,

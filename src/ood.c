@@ -1,6 +1,7 @@
 // out of order arrange packets module
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "ood"
 // keep a picked packet at most for KEEP_TURNS_MAX steps, or if there's no following
 // one, it will just be sent
@@ -16,9 +17,9 @@ static int giveUpCnt;
 
 static Ihandle *oodSetupUI() {
     Ihandle *oodControlsBox = IupHbox(
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
     );
@@ -140,7 +141,7 @@ static short oodProcess(PacketNode *head, PacketNode *tail) {
 }
 
 Module oodModule = {
-    "Out of order",
+    NULL,
     NAME,
     (short*)&oodEnabled,
     oodSetupUI,

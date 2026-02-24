@@ -1,0 +1,62 @@
+name: Build clumsy
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  release:
+    types: [ created ]
+
+jobs:
+  build:
+    name: Build on Windows
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        arch: [x86, x64]
+        conf: [Release]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Zig
+        uses: goto-bus-stop/setup-zig@v2
+        with:
+          version: 0.11.0
+
+      - name: Build with Zig
+        run: |
+          zig build -Darch=${{ matrix.arch }} -Dconf=${{ matrix.conf }}
+
+      - name: Prepare artifacts
+        shell: bash
+        run: |
+          ARCH_TAG="${{ matrix.arch }}"
+          CONF_TAG="${{ matrix.conf }}"
+          OUT_DIR="zig-out/${ARCH_TAG}_${CONF_TAG}_A"
+          ZIP_NAME="clumsy-${ARCH_TAG}-${CONF_TAG}.zip"
+          
+          if [ -d "$OUT_DIR" ]; then
+            cd "$OUT_DIR"
+            7z a -tzip "../$ZIP_NAME" *
+            cd ../..
+            echo "Created $ZIP_NAME"
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: clumsy-${{ matrix.arch }}-${{ matrix.conf }}
+          path: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+          if-no-files-found: error
+
+      - name: Upload release assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

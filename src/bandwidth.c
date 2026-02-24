@@ -5,6 +5,7 @@
 
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 
 #define NAME "bandwidth"
 #define BANDWIDTH_MIN  "0"
@@ -54,9 +55,9 @@ static CRateStats *rateStats = NULL;
 
 static Ihandle* bandwidthSetupUI() {
     Ihandle *bandwidthControlsBox = IupHbox(
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Limit(KB/s):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_LIMIT_KB_S)),
         bandwidthInput = IupText(NULL),
         NULL
     );
@@ -145,7 +146,7 @@ static short bandwidthProcess(PacketNode *head, PacketNode* tail) {
 // module
 //---------------------------------------------------------------------
 Module bandwidthModule = {
-    "Bandwidth",
+    NULL,
     NAME,
     (short*)&bandwidthEnabled,
     bandwidthSetupUI,

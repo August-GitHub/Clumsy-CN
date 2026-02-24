@@ -1,6 +1,7 @@
 // lagging packets
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "lag"
 #define LAG_MIN "0"
 #define LAG_MAX "15000"
@@ -29,9 +30,9 @@ static INLINE_FUNCTION short isBufEmpty() {
 
 static Ihandle *lagSetupUI() {
     Ihandle *lagControlsBox = IupHbox(
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Delay(ms):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_DELAY_MS)),
         timeInput = IupText(NULL),
         NULL
         );
@@ -123,7 +124,7 @@ static short lagProcess(PacketNode *head, PacketNode *tail) {
 }
 
 Module lagModule = {
-    "Lag",
+    NULL,
     NAME,
     (short*)&lagEnabled,
     lagSetupUI,

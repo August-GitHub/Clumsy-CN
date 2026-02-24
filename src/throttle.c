@@ -1,6 +1,7 @@
 // throttling packets
 #include "iup.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "throttle"
 #define TIME_MIN "0"
 #define TIME_MAX "1000"
@@ -31,12 +32,12 @@ static INLINE_FUNCTION short isBufEmpty() {
 
 static Ihandle *throttleSetupUI() {
     Ihandle *throttleControlsBox = IupHbox(
-        dropThrottledCheckbox = IupToggle("Drop Throttled", NULL),
-        IupLabel("Timeframe(ms):"),
+        dropThrottledCheckbox = IupToggle(i18nGetString(STR_DROP_THROTTLED), NULL),
+        IupLabel(i18nGetString(STR_TIMEFRAME_MS)),
         frameInput = IupText(NULL),
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
         );
@@ -156,7 +157,7 @@ THROTTLE_START:
 }
 
 Module throttleModule = {
-    "Throttle",
+    NULL,
     NAME,
     (short*)&throttleEnabled,
     throttleSetupUI,

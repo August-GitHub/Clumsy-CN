@@ -2,6 +2,7 @@
 #include "iup.h"
 #include "windivert.h"
 #include "common.h"
+#include "i18n.h"
 #define NAME "tamper"
 
 static Ihandle *inboundCheckbox, *outboundCheckbox, *chanceInput, *checksumCheckbox;
@@ -14,10 +15,10 @@ static volatile short tamperEnabled = 0,
 
 static Ihandle* tamperSetupUI() {
     Ihandle *dupControlsBox = IupHbox(
-        checksumCheckbox = IupToggle("Redo Checksum", NULL),
-        inboundCheckbox = IupToggle("Inbound", NULL),
-        outboundCheckbox = IupToggle("Outbound", NULL),
-        IupLabel("Chance(%):"),
+        checksumCheckbox = IupToggle(i18nGetString(STR_REDO_CHECKSUM), NULL),
+        inboundCheckbox = IupToggle(i18nGetString(STR_INBOUND), NULL),
+        outboundCheckbox = IupToggle(i18nGetString(STR_OUTBOUND), NULL),
+        IupLabel(i18nGetString(STR_CHANCE_PERCENT)),
         chanceInput = IupText(NULL),
         NULL
         );
@@ -121,7 +122,7 @@ static short tamperProcess(PacketNode *head, PacketNode *tail) {
 }
 
 Module tamperModule = {
-    "Tamper",
+    NULL,
     NAME,
     (short*)&tamperEnabled,
     tamperSetupUI,
