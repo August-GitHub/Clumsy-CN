@@ -53,13 +53,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: clumsy-${{ matrix.arch }}-${{ matrix.conf }}
-          path: zig-out/${{ matrix.arch }}_${{ matrix.conf }}.zip
+          path: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
           if-no-files-found: error
 
       - name: Upload release assets
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: zig-out/${{ matrix.arch }}_${{ matrix.conf }}.zip
+          files: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
