@@ -68,7 +68,11 @@ pub fn build(b: *std.build.Builder) void {
         "etc/clumsy.rc",
     });
 
-    const exe = b.addExecutable("clumsy", null);
+    // Zig 0.11.0: addExecutable 需要指定源文件或使用 addCSourceFile 添加
+    const exe = b.addExecutable(.{
+        .name = "clumsy",
+        .root_source_file = null,
+    });
 
     switch (conf) {
         .Debug => {
@@ -84,48 +88,50 @@ pub fn build(b: *std.build.Builder) void {
             exe.subsystem = .Windows;
         },
     }
-    const triple  = switch (arch) {
-        .x64 => "x86_64-windows-gnu",
-        .x86 => "i386-windows-gnu",
-    };
 
-    const target = CrossTarget.parse(.{
-        .arch_os_abi = triple,
-    }) catch unreachable;
+    // Zig 0.11.0: 使用标准目标查询
+    const target = b.standardTargetOptions(.{});
     exe.setTarget(target);
 
     exe.step.dependOn(&cmd.step);
-    exe.addObjectFile(res_obj_path);
-    exe.addCSourceFile("src/bandwidth.c", &.{""});
-    exe.addCSourceFile("src/divert.c", &.{""});
-    exe.addCSourceFile("src/drop.c", &.{""});
-    exe.addCSourceFile("src/duplicate.c", &.{""});
-    exe.addCSourceFile("src/elevate.c", &.{""});
-    exe.addCSourceFile("src/i18n.c", &.{""});
-    exe.addCSourceFile("src/lag.c", &.{""});
-    exe.addCSourceFile("src/main.c", &.{""});
-    exe.addCSourceFile("src/ood.c", &.{""});
-    exe.addCSourceFile("src/packet.c", &.{""});
-    exe.addCSourceFile("src/reset.c", &.{""});
-    exe.addCSourceFile("src/tamper.c", &.{""});
-    exe.addCSourceFile("src/throttle.c", &.{""});
-    exe.addCSourceFile("src/utils.c", &.{""});
+    
+    // Zig 0.11.0: addObjectFile 需要 LazyPath
+    exe.addObjectFile(.{ .path = res_obj_path });
+    
+    // Zig 0.11.0: addCSourceFile 使用 .{ .file = ..., .flags = ... } 格式
+    exe.addCSourceFile(.{ .file = .{ .path = "src/bandwidth.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/divert.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/drop.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/duplicate.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/elevate.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/i18n.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/lag.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/main.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/ood.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/packet.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/reset.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/tamper.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/throttle.c" }, .flags = &.{} });
+    exe.addCSourceFile(.{ .file = .{ .path = "src/utils.c" }, .flags = &.{} });
 
     if (arch == .x86)
-        exe.addCSourceFile("etc/chkstk.s", &.{""});
+        exe.addCSourceFile(.{ .file = .{ .path = "etc/chkstk.s" }, .flags = &.{} });
 
-    exe.addIncludeDir(b.fmt("external/{s}/include", .{windivert_dir}));
+    // Zig 0.11.0: addIncludeDir 更名为 addIncludePath
+    exe.addIncludePath(.{ .path = b.fmt("external/{s}/include", .{windivert_dir}) });
 
     const iupLib = switch (arch) {
         .x64 => "external/iup-3.30_Win64_mingw6_lib",
         .x86 => "external/iup-3.30_Win32_mingw6_lib",
     };
 
-    exe.addIncludeDir(std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "include"}) catch unreachable);
-    exe.addCSourceFile(std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "libiup.a"}) catch unreachable, &.{});
+    exe.addIncludePath(.{ .path = std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "include"}) catch unreachable });
+    exe.addCSourceFile(.{ .file = .{ .path = std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "libiup.a"}) catch unreachable }, .flags = &.{} });
 
     exe.linkLibC();
-    exe.addLibPath(b.fmt("external/{s}/{s}", .{windivert_dir, arch_tag}));
+    
+    // Zig 0.11.0: addLibPath 更名为 addLibraryPath
+    exe.addLibraryPath(.{ .path = b.fmt("external/{s}/{s}", .{windivert_dir, arch_tag}) });
     exe.linkSystemLibrary("WinDivert");
     exe.linkSystemLibrary("comctl32");
     exe.linkSystemLibrary("Winmm");
@@ -136,7 +142,7 @@ pub fn build(b: *std.build.Builder) void {
     exe.linkSystemLibrary("uuid");
     exe.linkSystemLibrary("ole32");
 
-    const exe_install_step = b.addInstallArtifact(exe);  
+    const exe_install_step = b.addInstallArtifact(exe, .{});  
     if (conf == .Ship)
     {
         const remove_pdb_step = RemoveOutFile.create(b, "clumsy.pdb", prefix);
