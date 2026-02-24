@@ -23,7 +23,10 @@ pub fn build(b: *std.build.Builder) void {
 
     debug.print("- arch: {s}, conf: {s}, sign: {s}\n", .{@tagName(arch), @tagName(conf), @tagName(windivert_sign)});
     debug.print("- windows_kit_bin_root: {s}\n", .{windows_kit_bin_root});
-    _ = std.fs.realpathAlloc(b.allocator, windows_kit_bin_root) catch @panic("windows_kit_bin_root not found");
+    // 尝试获取 realpath，但如果失败也不 panic
+    _ = std.fs.realpathAlloc(b.allocator, windows_kit_bin_root) catch |err| {
+        debug.print("警告: 无法获取 windows_kit_bin_root 的真实路径: {}", .{err});
+    };
 
     const prefix = b.fmt("{s}_{s}_{s}", .{arch_tag, conf_tag, sign_tag});
     b.exe_dir = b.fmt("{s}/{s}", .{b.install_path, prefix});
@@ -45,11 +48,36 @@ pub fn build(b: *std.build.Builder) void {
 
     const res_obj_path = b.fmt("{s}/clumsy_res.obj", .{tmp_path});
 
-    const rc_exe = b.findProgram(&.{
-        "rc",
-    }, &.{
+    // 尝试在多个位置查找 rc.exe
+    var rc_exe: []const u8 = undefined;
+    const rc_paths = &[_][]const u8{
         b.pathJoin(&.{windows_kit_bin_root, @tagName(arch)}),
-    }) catch @panic("unable to find `rc.exe`, check your windows_kit_bin_root");
+        "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22000.0",
+        "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0",
+        "C:/Program Files (x86)/Windows Kits/10/bin/x86",
+        "C:/Program Files (x86)/Windows Kits/10/bin/x64",
+    };
+    
+    var found = false;
+    for (rc_paths) |path| {
+        if (b.findProgram(&.{"rc.exe"}, &.{path})) |exe| {
+            rc_exe = exe;
+            found = true;
+            break;
+        }
+    }
+    
+    if (!found) {
+        // 尝试直接使用 rc.exe，依赖于 PATH
+        if (b.findProgram(&.{"rc.exe"}, &.{})) |exe| {
+            rc_exe = exe;
+            found = true;
+        }
+    }
+    
+    if (!found) {
+        @panic("unable to find `rc.exe`, please install Windows SDK or add rc.exe to PATH");
+    }
 
     const archFlag = switch (arch) {
         .x86 => "X86",
