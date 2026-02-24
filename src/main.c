@@ -57,7 +57,7 @@ UINT filtersSize;
 filterRecord filters[CONFIG_MAX_RECORDS] = {0};
 char configBuf[CONFIG_BUF_SIZE+2]; // add some padding to write \n
 BOOL parameterized = 0; // parameterized flag, means reading args from command line
-Language savedLanguage = LANG_ENGLISH;
+Language savedLanguage = CLUMSY_LANG_ENGLISH;
 
 // loading up filters and fill in
 void loadConfig() {
@@ -111,10 +111,10 @@ EAT_SPACE:  while (isspace(*current)) { ++current; }
                 *current = '\0';
                 if (*(current-1) == '\r') *(current-1) = 0;
                 savedLanguage = atoi(last);
-                if (savedLanguage < 0 || savedLanguage >= LANG_COUNT) {
-                    savedLanguage = LANG_ENGLISH;
-                }
-                i18nInit(savedLanguage);
+            if (savedLanguage < 0 || savedLanguage >= CLUMSY_LANG_COUNT) {
+                savedLanguage = CLUMSY_LANG_ENGLISH;
+            }
+            i18nInit(savedLanguage);
                 last = current = current + 1;
                 continue;
             }
@@ -207,7 +207,7 @@ void init(int argc, char* argv[]) {
     // setup language selector
     IupSetAttribute(langSelectList, "VISIBLECOLUMNS", "10");
     IupSetAttribute(langSelectList, "DROPDOWN", "YES");
-    for (ix = 0; ix < LANG_COUNT; ++ix) {
+    for (ix = 0; ix < CLUMSY_LANG_COUNT; ++ix) {
         char ixBuf[4];
         sprintf(ixBuf, "%d", ix+1);
         IupStoreAttribute(langSelectList, ixBuf, i18nGetLanguageName(ix));
@@ -522,7 +522,7 @@ static void updateUILanguage(void) {
     }
     
     // Update language selector
-    for (ix = 0; ix < LANG_COUNT; ++ix) {
+    for (ix = 0; ix < CLUMSY_LANG_COUNT; ++ix) {
         char ixBuf[4];
         sprintf(ixBuf, "%d", ix+1);
         IupStoreAttribute(langSelectList, ixBuf, i18nGetLanguageName(ix));

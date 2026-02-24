@@ -2,10 +2,10 @@
 #include "common.h"
 #include <string.h>
 
-static Language currentLang = LANG_ENGLISH;
+static Language currentLang = CLUMSY_LANG_ENGLISH;
 
-static const char* strings[LANG_COUNT][STR_COUNT_MAX] = {
-    [LANG_ENGLISH] = {
+static const char* strings[CLUMSY_LANG_COUNT][STR_COUNT_MAX] = {
+    [CLUMSY_LANG_ENGLISH] = {
         [STR_TITLE] = "clumsy " CLUMSY_VERSION,
         [STR_FILTERING] = "Filtering",
         [STR_FUNCTIONS] = "Functions",
@@ -47,7 +47,7 @@ static const char* strings[LANG_COUNT][STR_COUNT_MAX] = {
         [STR_JAPANESE] = "日本語",
         [STR_LOOPBACK_PACKETS] = "loopback packets"
     },
-    [LANG_CHINESE_SIMPLIFIED] = {
+    [CLUMSY_LANG_CHINESE_SIMPLIFIED] = {
         [STR_TITLE] = "clumsy " CLUMSY_VERSION,
         [STR_FILTERING] = "过滤规则",
         [STR_FUNCTIONS] = "功能",
@@ -89,7 +89,7 @@ static const char* strings[LANG_COUNT][STR_COUNT_MAX] = {
         [STR_JAPANESE] = "日本語",
         [STR_LOOPBACK_PACKETS] = "本地回环数据包"
     },
-    [LANG_CHINESE_TRADITIONAL] = {
+    [CLUMSY_LANG_CHINESE_TRADITIONAL] = {
         [STR_TITLE] = "clumsy " CLUMSY_VERSION,
         [STR_FILTERING] = "過濾規則",
         [STR_FUNCTIONS] = "功能",
@@ -131,7 +131,7 @@ static const char* strings[LANG_COUNT][STR_COUNT_MAX] = {
         [STR_JAPANESE] = "日本語",
         [STR_LOOPBACK_PACKETS] = "本地迴圈封包"
     },
-    [LANG_JAPANESE] = {
+    [CLUMSY_LANG_JAPANESE] = {
         [STR_TITLE] = "clumsy " CLUMSY_VERSION,
         [STR_FILTERING] = "フィルター",
         [STR_FUNCTIONS] = "機能",
@@ -176,8 +176,8 @@ static const char* strings[LANG_COUNT][STR_COUNT_MAX] = {
 };
 
 void i18nInit(Language lang) {
-    if (lang < 0 || lang >= LANG_COUNT) {
-        lang = LANG_ENGLISH;
+    if (lang < 0 || lang >= CLUMSY_LANG_COUNT) {
+        lang = CLUMSY_LANG_ENGLISH;
     }
     currentLang = lang;
 }
@@ -187,7 +187,7 @@ Language i18nGetCurrentLanguage(void) {
 }
 
 void i18nSetLanguage(Language lang) {
-    if (lang >= 0 && lang < LANG_COUNT) {
+    if (lang >= 0 && lang < CLUMSY_LANG_COUNT) {
         currentLang = lang;
     }
 }
@@ -201,18 +201,18 @@ const char* i18nGetString(StringID id) {
 }
 
 const char* i18nGetLanguageName(Language lang) {
-    if (lang < 0 || lang >= LANG_COUNT) {
+    if (lang < 0 || lang >= CLUMSY_LANG_COUNT) {
         return "";
     }
     switch (lang) {
-        case LANG_ENGLISH:
-            return strings[LANG_ENGLISH][STR_ENGLISH];
-        case LANG_CHINESE_SIMPLIFIED:
-            return strings[LANG_CHINESE_SIMPLIFIED][STR_CHINESE_SIMPLIFIED];
-        case LANG_CHINESE_TRADITIONAL:
-            return strings[LANG_CHINESE_TRADITIONAL][STR_CHINESE_TRADITIONAL];
-        case LANG_JAPANESE:
-            return strings[LANG_JAPANESE][STR_JAPANESE];
+        case CLUMSY_LANG_ENGLISH:
+            return strings[CLUMSY_LANG_ENGLISH][STR_ENGLISH];
+        case CLUMSY_LANG_CHINESE_SIMPLIFIED:
+            return strings[CLUMSY_LANG_CHINESE_SIMPLIFIED][STR_CHINESE_SIMPLIFIED];
+        case CLUMSY_LANG_CHINESE_TRADITIONAL:
+            return strings[CLUMSY_LANG_CHINESE_TRADITIONAL][STR_CHINESE_TRADITIONAL];
+        case CLUMSY_LANG_JAPANESE:
+            return strings[CLUMSY_LANG_JAPANESE][STR_JAPANESE];
         default:
             return "";
     }
