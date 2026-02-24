@@ -6,6 +6,12 @@
   <img src="https://img.shields.io/badge/Zig-0.9.1-orange" alt="Zig 版本">
 </p>
 
+---
+
+### 🇺🇸 英文版 | [Read English Version](./README.md)
+
+---
+
 __clumsy 可以让你的 Windows 网络条件变得更差，但以一种可控且交互式的方式。__
 
 clumsy 利用优秀的 [WinDivert](http://reqrypt.org/windivert.html) 库，捕获流经的网络数据包，根据你的需求对其进行延迟/丢弃/篡改等操作，然后发送出去。无论你是想追踪与网络故障相关的奇怪 bug，还是想在糟糕的网络环境下评估你的应用程序，clumsy 都能派上用场：
