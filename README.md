@@ -8,7 +8,7 @@
 
 ---
 
-### 🇨🇳 中文版 | [Read in English](./README.zh-CN.md)
+### 🇨🇳 中文版 | [View Chinese Version](./README.zh-CN.md)
 
 ---
 
