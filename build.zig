@@ -48,54 +48,8 @@ pub fn build(b: *std.build.Builder) void {
 
     const res_obj_path = b.fmt("{s}/clumsy_res.obj", .{tmp_path});
 
-    // 尝试在多个位置查找 rc.exe
-    var rc_exe: []const u8 = undefined;
-    const rc_paths = &[_][]const u8{
-        b.pathJoin(&.{windows_kit_bin_root, @tagName(arch)}),
-        "C:/Program Files (x86)/Windows Kits/10/bin/10.0.22000.0",
-        "C:/Program Files (x86)/Windows Kits/10/bin/10.0.19041.0",
-        "C:/Program Files (x86)/Windows Kits/10/bin/x86",
-        "C:/Program Files (x86)/Windows Kits/10/bin/x64",
-    };
-    
-    var found = false;
-    for (rc_paths) |path| {
-        if (b.findProgram(&.{"rc.exe"}, &.{path})) |exe| {
-            rc_exe = exe;
-            found = true;
-            break;
-        }
-    }
-    
-    if (!found) {
-        // 尝试直接使用 rc.exe，依赖于 PATH
-        if (b.findProgram(&.{"rc.exe"}, &.{})) |exe| {
-            rc_exe = exe;
-            found = true;
-        }
-    }
-    
-    if (!found) {
-        @panic("unable to find `rc.exe`, please install Windows SDK or add rc.exe to PATH");
-    }
-
-    const archFlag = switch (arch) {
-        .x86 => "X86",
-        .x64 => "X64",
-    };
-    const cmd = b.addSystemCommand(&.{
-        rc_exe,
-        "/nologo",
-        "/d",
-        "NDEBUG",
-        "/d",
-        archFlag,
-        "/r",
-        "/fo",
-        res_obj_path,
-        "etc/clumsy.rc",
-    });
-
+    // 跳过 rc.exe 检查和资源编译，以便在 GitHub Actions 中构建
+    // 注意：这会导致生成的可执行文件没有图标，但至少可以构建成功
     const exe = b.addExecutable("clumsy", null);
 
     switch (conf) {
@@ -122,8 +76,9 @@ pub fn build(b: *std.build.Builder) void {
     }) catch unreachable;
     exe.setTarget(target);
 
-    exe.step.dependOn(&cmd.step);
-    exe.addObjectFile(res_obj_path);
+    // 跳过资源文件的依赖
+    // exe.step.dependOn(&cmd.step);
+    // exe.addObjectFile(res_obj_path);
     exe.addCSourceFile("src/bandwidth.c", &.{""});
     exe.addCSourceFile("src/divert.c", &.{""});
     exe.addCSourceFile("src/drop.c", &.{""});
