@@ -51,9 +51,14 @@ clumsy now supports multiple languages! You can switch between:
 
 ### 🚀 Cloud Builds with GitHub Actions
 
-The project now supports automated cloud builds via GitHub Actions!
+The project supports automated cloud builds via GitHub Actions!
 
-- **Automatic builds** on every push to `main`/`master` branch
+| Trigger Method | Description |
+|----------------|-------------|
+| 🏷️ **Tag Push** | Push a tag like `v1.0` to trigger build |
+| 📦 **Release** | Create a new Release on GitHub |
+| 👆 **Manual** | Run workflow manually from Actions page |
+
 - **Multi-architecture support**: x86 and x64
 - **Release automation**: Creates downloadable artifacts for each release
 
