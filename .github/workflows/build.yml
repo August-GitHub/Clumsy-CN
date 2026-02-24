@@ -44,19 +44,22 @@ jobs:
             7z a -tzip "../$ZIP_NAME" *
             cd ../..
             echo "Created $ZIP_NAME"
+          else
+            echo "Directory $OUT_DIR not found!"
+            ls -la zig-out/ 2>/dev/null || echo "zig-out directory does not exist"
           fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: clumsy-${{ matrix.arch }}-${{ matrix.conf }}
-          path: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+          path: zig-out/${{ matrix.arch }}_${{ matrix.conf }}.zip
           if-no-files-found: error
 
       - name: Upload release assets
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+          files: zig-out/${{ matrix.arch }}_${{ matrix.conf }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
