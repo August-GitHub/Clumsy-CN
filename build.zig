@@ -46,8 +46,6 @@ pub fn build(b: *std.build.Builder) void {
     if (conf == .Ship)
         b.installFile("LICENSE", b.fmt("{s}/License.txt", .{prefix}));
 
-    const res_obj_path = b.fmt("{s}/clumsy_res.obj", .{tmp_path});
-
     // 跳过 rc.exe 检查和资源编译，以便在 GitHub Actions 中构建
     // 注意：这会导致生成的可执行文件没有图标，但至少可以构建成功
     const exe = b.addExecutable("clumsy", null);
