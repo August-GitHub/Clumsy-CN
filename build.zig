@@ -72,15 +72,15 @@ pub fn build(b: *std.build.Builder) void {
 
     switch (conf) {
         .Debug => {
-            exe.setBuildMode(.Debug);
+            exe.setOptimizeMode(.Debug);
             exe.subsystem = .Console;
         },
         .Release => {
-            exe.setBuildMode(.ReleaseSafe);
+            exe.setOptimizeMode(.ReleaseSafe);
             exe.subsystem = .Windows;
         },
         .Ship => {
-            exe.setBuildMode(.ReleaseFast);
+            exe.setOptimizeMode(.ReleaseFast);
             exe.subsystem = .Windows;
         },
     }
