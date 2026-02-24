@@ -139,7 +139,7 @@ pub fn build(b: *std.build.Builder) void {
     const exe_install_step = b.addInstallArtifact(exe);  
     if (conf == .Ship)
     {
-        const remove_pdb_step = RemoveOutFile.create(b, "clumsy.pdb");
+        const remove_pdb_step = RemoveOutFile.create(b, "clumsy.pdb", prefix);
         remove_pdb_step.step.dependOn(&exe_install_step.step);
         b.getInstallStep().dependOn(&remove_pdb_step.step);
     }
@@ -158,24 +158,25 @@ pub const RemoveOutFile = struct {
     step: Step,
     builder: *Builder,
     rel_path: []const u8,
+    prefix: []const u8,
 
-    pub fn create(builder: *Builder, rel_path: []const u8) *@This() {
+    pub fn create(builder: *Builder, rel_path: []const u8, prefix: []const u8) *@This() {
         const self = builder.allocator.create(@This()) catch unreachable;
         self.* = . {
             .step = Step.init(.custom, builder.fmt("RemoveOutFile {s}", .{rel_path}), builder.allocator, make),
             .builder = builder,
             .rel_path = rel_path,
+            .prefix = prefix,
         };
         return self;
     }
 
     fn make(step: *Step) anyerror!void {
         const self = @fieldParentPtr(RemoveOutFile, "step", step);
-        // 由于我们使用 prefix 安装到子目录，我们需要在删除文件时考虑这一点
-        const out_path = std.fs.path.join(self.builder.allocator, &[2][]const u8{self.builder.install_path, self.rel_path}) catch unreachable;
+        // 文件安装到 prefix 子目录中，需要包含 prefix 路径
+        const out_path = std.fs.path.join(self.builder.allocator, &[3][]const u8{self.builder.install_path, self.prefix, self.rel_path}) catch unreachable;
         std.fs.cwd().deleteFile(out_path) catch |err| {
             if (err != error.FileNotFound) return err;
-            // 如果文件不存在，我们忽略错误
         };
     }
 };
