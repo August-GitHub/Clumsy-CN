@@ -26,12 +26,12 @@ pub fn build(b: *std.build.Builder) void {
     _ = std.fs.realpathAlloc(b.allocator, windows_kit_bin_root) catch @panic("windows_kit_bin_root not found");
 
     const prefix = b.fmt("{s}_{s}_{s}", .{arch_tag, conf_tag, sign_tag});
-    b.exe_dir = b.fmt("{s}/{s}", .{b.install_path, prefix});
+    const output_dir = b.fmt("{s}/{s}", .{b.install_path, prefix});
 
-    debug.print("- out: {s}\n", .{b.exe_dir});
+    debug.print("- out: {s}\n", .{output_dir});
 
     const tmp_path = b.fmt("tmp/{s}", .{prefix});
-    b.makePath(tmp_path) catch @panic("unable to create tmp directory");
+    std.fs.cwd().makePath(tmp_path) catch @panic("unable to create tmp directory");
 
     b.installFile(b.fmt("external/{s}/{s}/WinDivert.dll", .{windivert_dir, arch_tag}), b.fmt("{s}/WinDivert.dll", .{prefix}));
     switch (arch) {
@@ -46,9 +46,9 @@ pub fn build(b: *std.build.Builder) void {
     const res_obj_path = b.fmt("{s}/clumsy_res.obj", .{tmp_path});
 
     const rc_exe = b.findProgram(&.{
-        "rc",
+        "rc.exe",
     }, &.{
-        b.pathJoin(&.{windows_kit_bin_root, @tagName(arch)}),
+        std.fs.path.join(b.allocator, &[2][]const u8{windows_kit_bin_root, @tagName(arch)}) catch unreachable,
     }) catch @panic("unable to find `rc.exe`, check your windows_kit_bin_root");
 
     const archFlag = switch (arch) {
@@ -121,8 +121,8 @@ pub fn build(b: *std.build.Builder) void {
         .x86 => "external/iup-3.30_Win32_mingw6_lib",
     };
 
-    exe.addIncludeDir(b.pathJoin(&.{iupLib, "include"}));
-    exe.addCSourceFile(b.pathJoin(&.{iupLib, "libiup.a"}), &.{""});
+    exe.addIncludeDir(std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "include"}) catch unreachable);
+    exe.addCSourceFile(std.fs.path.join(b.allocator, &[2][]const u8{iupLib, "libiup.a"}) catch unreachable, &.{});
 
     exe.linkLibC();
     exe.addLibPath(b.fmt("external/{s}/{s}", .{windivert_dir, arch_tag}));
@@ -171,7 +171,11 @@ pub const RemoveOutFile = struct {
 
     fn make(step: *Step) anyerror!void {
         const self = @fieldParentPtr(RemoveOutFile, "step", step);
-        const out_dir = try std.fs.openDirAbsolute(self.builder.exe_dir, .{});
-        try out_dir.deleteFile(self.rel_path);
+        // 由于我们使用 prefix 安装到子目录，我们需要在删除文件时考虑这一点
+        const out_path = std.fs.path.join(self.builder.allocator, &[2][]const u8{self.builder.install_path, self.rel_path}) catch unreachable;
+        std.fs.cwd().deleteFile(out_path) catch |err| {
+            if (err != error.FileNotFound) return err;
+            // 如果文件不存在，我们忽略错误
+        };
     }
 };
