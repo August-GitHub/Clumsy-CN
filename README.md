@@ -59,13 +59,13 @@ The project supports automated cloud builds via GitHub Actions!
 | 📦 **Release** | Create a new Release on GitHub |
 | 👆 **Manual** | Run workflow manually from Actions page |
 
-- **Multi-architecture support**: x86 and x64
+- **Multi-architecture support**: x86-32 and x86-64
 - **Release automation**: Creates downloadable artifacts for each release
 
 | Artifact | Description |
 |----------|-------------|
-| `clumsy-x86-Release.zip` | 32-bit Release build |
-| `clumsy-x64-Release.zip` | 64-bit Release build |
+| `clumsy-x86-32-Release.zip` | 32-bit x86 Release build |
+| `clumsy-x86-64-Release.zip` | 64-bit x86 Release build |
 
 ---
 

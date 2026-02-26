@@ -36,8 +36,18 @@ jobs:
         run: |
           ARCH_TAG="${{ matrix.arch }}"
           CONF_TAG="${{ matrix.conf }}"
+          
+          # 转换为更明确的架构名称
+          if [ "$ARCH_TAG" = "x86" ]; then
+            ARCH_NAME="x86-32"
+          elif [ "$ARCH_TAG" = "x64" ]; then
+            ARCH_NAME="x86-64"
+          else
+            ARCH_NAME="$ARCH_TAG"
+          fi
+          
           OUT_DIR="zig-out/${ARCH_TAG}_${CONF_TAG}_A"
-          ZIP_NAME="clumsy-${ARCH_TAG}-${CONF_TAG}.zip"
+          ZIP_NAME="clumsy-${ARCH_NAME}-${CONF_TAG}.zip"
           
           if [ -d "$OUT_DIR" ]; then
             cd "$OUT_DIR"
@@ -52,14 +62,14 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: clumsy-${{ matrix.arch }}-${{ matrix.conf }}
-          path: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+          name: clumsy-${{ matrix.arch == 'x86' && 'x86-32' || 'x86-64' }}-${{ matrix.conf }}
+          path: zig-out/clumsy-${{ matrix.arch == 'x86' && 'x86-32' || 'x86-64' }}-${{ matrix.conf }}.zip
           if-no-files-found: error
 
       - name: Upload release assets
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v1
         with:
-          files: zig-out/clumsy-${{ matrix.arch }}-${{ matrix.conf }}.zip
+          files: zig-out/clumsy-${{ matrix.arch == 'x86' && 'x86-32' || 'x86-64' }}-${{ matrix.conf }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

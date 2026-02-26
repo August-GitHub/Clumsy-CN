@@ -155,6 +155,7 @@ void init(int argc, char* argv[]) {
 
     // iup inits
     IupOpen(&argc, &argv);
+    IupSetGlobal("UTF8MODE", "YES");
 
     // this is so easy to get wrong so it's pretty worth noting in the program
     statusLabel = IupLabel(i18nGetString(STR_NOTICE));

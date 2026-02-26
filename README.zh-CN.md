@@ -59,13 +59,13 @@ clumsy 现在支持多种语言！你可以在以下语言之间切换：
 | 📦 **创建 Release** | 在 GitHub 上创建新 Release |
 | 👆 **手动触发** | 在 Actions 页面手动运行工作流 |
 
-- **多架构支持**：x86 和 x64
+- **多架构支持**：x86-32 和 x86-64
 - **发布自动化**：为每个版本创建可下载的构建产物
 
 | 构建产物 | 说明 |
 |----------|------|
-| `clumsy-x86-Release.zip` | 32 位 Release 构建 |
-| `clumsy-x64-Release.zip` | 64 位 Release 构建 |
+| `clumsy-x86-32-Release.zip` | 32 位 x86 Release 构建 |
+| `clumsy-x86-64-Release.zip` | 64 位 x86 Release 构建 |
 
 ---
 
